@@ -3,9 +3,12 @@ package app.servlets;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
 import javax.naming.Context;
@@ -87,8 +90,19 @@ public class getQuestionsServlet extends HttpServlet {
 			pstmt = conn.prepareStatement(AppConstants.SELECT_NEW_QUESTIONS_BY_OFFSET);
 			pstmt.setInt(1, 0);
 			rs = pstmt.executeQuery();
+			
+			long tsTime;
+			DateFormat df;
+			Date startDate;
+			String createdDate;
+			
 			while(rs.next()){
-				QuestionContent qC = new QuestionContent ( rs.getTimestamp(1), rs.getString(2), rs.getString(3), rs.getString(4), rs.getInt(5),rs.getInt(6));
+				tsTime = rs.getTimestamp(1).getTime();
+				df = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+				startDate = new Date(tsTime);
+				createdDate = df.format(startDate);
+				
+				QuestionContent qC = new QuestionContent ( createdDate, rs.getString(2), rs.getString(3), rs.getString(4), rs.getInt(5),rs.getInt(6));
 				messageResult.add(qC);
 
 			}
