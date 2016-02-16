@@ -65,7 +65,7 @@ public class questionServlet extends HttpServlet {
 			connection = dataSource.getConnection();
 			
 			statement = connection.createStatement();
-			resSet = statement.executeQuery(AppConstants.MAX_ID);
+			resSet = statement.executeQuery(AppConstants.Q_MAX_ID);
 			if(resSet.next() == true)
 			{
 				id = resSet.getInt(1)+1;
@@ -100,20 +100,7 @@ public class questionServlet extends HttpServlet {
 				e.printStackTrace();
 			}
 		}
-		
-		
-		
-	
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
+
 	}
 
 }

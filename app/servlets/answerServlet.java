@@ -3,13 +3,15 @@ package app.servlets;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -25,19 +27,20 @@ import org.apache.tomcat.dbcp.dbcp.BasicDataSource;
 import com.google.gson.Gson;
 
 import app.AppConstants;
+import app.model.AnswerContent;
 import app.model.QuestionContent;
 
 /**
- * Servlet implementation class getQuestionsServlet
+ * Servlet implementation class answerServlet
  */
-@WebServlet("/getQuestionsServlet")
-public class getQuestionsServlet extends HttpServlet {
+@WebServlet("/answerServlet")
+public class answerServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
        
     /**
      * @see HttpServlet#HttpServlet()
      */
-    public getQuestionsServlet() {
+    public answerServlet() {
         super();
         // TODO Auto-generated constructor stub
     }
@@ -46,7 +49,6 @@ public class getQuestionsServlet extends HttpServlet {
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		
 		ResultSet rs =null;
 		PreparedStatement pstmt=null;
 		Connection conn = null;
@@ -55,7 +57,7 @@ public class getQuestionsServlet extends HttpServlet {
 		try {
 
 
-			ArrayList <QuestionContent> messageResult= new ArrayList <QuestionContent>();
+			ArrayList <AnswerContent> messageResult= new ArrayList <AnswerContent>();
 			Gson gson = new Gson();
 			String jsonResult;
 			response.setContentType("text/html");
@@ -87,8 +89,9 @@ public class getQuestionsServlet extends HttpServlet {
 			}
 			*/
 			//int offset = Integer.parseInt(request.getParameter("offset"));
-			pstmt = conn.prepareStatement(AppConstants.SELECT_NEW_QUESTIONS_BY_OFFSET);
-			pstmt.setInt(1, 0);
+			pstmt = conn.prepareStatement(AppConstants.SELECT_ANSWERS);
+			int qid = Integer.parseInt(request.getParameter("qid"));
+			pstmt.setInt(1, qid);
 			rs = pstmt.executeQuery();
 			
 			long tsTime;
@@ -102,7 +105,7 @@ public class getQuestionsServlet extends HttpServlet {
 				startDate = new Date(tsTime);
 				createdDate = df.format(startDate);
 				
-				QuestionContent qC = new QuestionContent ( createdDate, rs.getString(2), rs.getString(3), rs.getString(4), rs.getInt(5),rs.getInt(6),rs.getInt(7));
+				AnswerContent qC = new AnswerContent ( createdDate, rs.getString(2), rs.getString(3), rs.getInt(4),rs.getInt(5));
 				messageResult.add(qC);
 
 			}
@@ -120,16 +123,62 @@ public class getQuestionsServlet extends HttpServlet {
 
 
 		}
-		
-		
 	}
 
 	/**
 	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		doGet(request, response);
+		Connection connection = null;
+		PreparedStatement pStatement = null;
+		Statement statement = null;
+		ResultSet resSet = null;
+		
+		Date date=new Date();
+		Timestamp timestamp = new Timestamp(date.getTime());
+		
+		int id = 1;
+		try {
+			
+			Context context = new InitialContext();
+			BasicDataSource dataSource = (BasicDataSource) context.lookup(AppConstants.DB_DATASOURCE);
+			connection = dataSource.getConnection();
+			
+			statement = connection.createStatement();
+			resSet = statement.executeQuery(AppConstants.A_MAX_ID);
+			if(resSet.next() == true)
+			{
+				id = resSet.getInt(1)+1;
+			} 
+			connection.commit();
+			statement.close();
+			
+			pStatement = connection.prepareStatement(AppConstants.INSERT_ANSWER_STMT);
+			pStatement.setInt ( 1 , id);
+			pStatement.setInt ( 2 , Integer.parseInt(request.getParameter("id")));
+			pStatement.setInt ( 3 , 0);
+			pStatement.setString( 4 , request.getParameter("answer"));
+			pStatement.setString( 5 , request.getParameter("nickname"));
+			pStatement.setTimestamp ( 6 , timestamp);
+		
+			pStatement.executeUpdate();
+			connection.commit();
+			
+			response.setContentType("text/html");
+			response.getWriter().print("Ok");
+			System.out.println("Ok");
+			
+		} catch (NamingException | SQLException e) {
+			e.printStackTrace();
+		}
+		finally{
+			try {
+				pStatement.close();
+				connection.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 }

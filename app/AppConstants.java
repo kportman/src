@@ -25,12 +25,22 @@ public interface AppConstants {
 			+ "TOPIC,"
 			+ "NICKNAME,"
 			+ "RATING,"
-			+ "VOTES "
+			+ "VOTES, "
+			+ "ID "
 			+ "FROM QUESTIONS "
 			+ "WHERE NUM_OF_ANSWERS=0 "
 			+ "ORDER BY TIME_ASKED DESC "
 			+ "OFFSET ? ROWS "
 			+ "FETCH NEXT 20 ROWS ONLY";
+	
+	public final String SELECT_ANSWERS = "SELECT TIME_ANSWERED,"
+			+ "ANSWER_TEXT,"
+			+ "NICKNAME,"
+			+ "VOTES, "
+			+ "ID "
+			+ "FROM ANSWERS "
+			+ "WHERE QID=? "
+			+ "ORDER BY VOTES DESC";
 	
 	public final String CHECK_USER= "SELECT * "
 			+ "FROM USERS "
@@ -61,14 +71,25 @@ public interface AppConstants {
 			+ "TOPIC VARCHAR(140),"
 			+ "FOREIGN KEY	(NICKNAME) REFERENCES USERS(NICKNAME))";
 	
+	public final String CREATE_ANSWERS_TABLE="CREATE TABLE ANSWERS("
+			+ "ID INT PRIMARY KEY,"
+			+ "QID INT NOT NULL,"
+			+ "VOTES INT DEFAULT 0,"
+			+ "ANSWER_TEXT VARCHAR(140) NOT NULL CHECK (ANSWER_TEXT <> ''),"
+			+ "NICKNAME VARCHAR(20) CHECK (NICKNAME <> ''),"
+			+ "TIME_ANSWERED TIMESTAMP NOT NULL,"
+			+ "FOREIGN KEY	(QID) REFERENCES QUESTIONS(ID))";
+	
 	//insert statements:
 	
 	public final String INSERT_USER_STMT = "INSERT INTO USERS VALUES(?,?,?,?,?,?)";
 	public final String INSERT_QUESTION_STMT="INSERT INTO QUESTIONS VALUES(?,?,?,?,?,?,?,?)";
+	public final String INSERT_ANSWER_STMT="INSERT INTO ANSWERS VALUES(?,?,?,?,?,?)";
 	
 	public final Boolean CREATE_DB = false;// Initialize to true only if data base is new, Otherwise - set to false
 	
 	public final String QUESTIONS_SEQUENCE = "SELECT NEXT VALUE FOR Q_SEQ";
-	public final String MAX_ID = "SELECT MAX(ID) FROM QUESTIONS";
+	public final String Q_MAX_ID = "SELECT MAX(ID) FROM QUESTIONS";
+	public final String A_MAX_ID = "SELECT MAX(ID) FROM ANSWERS";
 	
 }

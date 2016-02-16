@@ -70,6 +70,15 @@ public class FunItalyContextListener implements ServletContextListener {
 					statement.close();
 				}
 				resSet.close();
+				
+				resSet = dbmd.getTables(null, null, "ANSWERS", null);
+				if (resSet.next() == false) {
+					statement = connection.createStatement();
+					statement.executeUpdate(AppConstants.CREATE_ANSWERS_TABLE);
+					connection.commit();
+					statement.close();
+				}
+				resSet.close();
 		} catch (NamingException | SQLException e) {
 			e.printStackTrace();
 		}
