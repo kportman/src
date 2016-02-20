@@ -6,12 +6,12 @@ public class QuestionContent {
 	private String time;
 	private String topic;
 	private String nickname;
-	private int rating;
+	private double rating;
 	private int votes;
 	private String text;
 	private int id;
 	
-	public QuestionContent(String time, String text, String topic, String nickname, int rating, int votes, int id){
+	public QuestionContent(String time, String text, String topic, String nickname, double rating, int votes, int id){
 		this.time = time;
 		this.topic = topic;
 		this.nickname = nickname;

@@ -6,12 +6,19 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -28,23 +35,50 @@ import com.google.gson.Gson;
 
 import app.AppConstants;
 import app.model.AnswerContent;
-import app.model.QuestionContent;
 
 /**
- * Servlet implementation class answerServlet
+ * Servlet implementation class byTopicServlet
  */
-@WebServlet("/answerServlet")
-public class answerServlet extends HttpServlet {
+@WebServlet("/byTopicServlet")
+public class byTopicServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
        
     /**
      * @see HttpServlet#HttpServlet()
      */
-    public answerServlet() {
+    public byTopicServlet() {
         super();
         // TODO Auto-generated constructor stub
     }
 
+    /*
+     * Java method to sort Map in Java by value e.g. HashMap or Hashtable
+     * throw NullPointerException if Map contains null values
+     * It also sort values even if they are duplicates
+     */
+    public static <K extends Comparable,V extends Comparable> Map<K,V> sortByValues(Map<K,V> map){
+        List<Map.Entry<K,V>> entries = new LinkedList<Map.Entry<K,V>>(map.entrySet());
+      
+        Collections.sort(entries, new Comparator<Map.Entry<K,V>>() {
+
+            @Override
+            public int compare(Entry<K, V> o1, Entry<K, V> o2) {
+                return -1 * (o1.getValue().compareTo(o2.getValue()));
+            }
+        });
+      
+        //LinkedHashMap will keep the keys in the order they are inserted
+        //which is currently sorted on natural ordering
+        Map<K,V> sortedMap = new LinkedHashMap<K,V>();
+      
+        for(Map.Entry<K,V> entry: entries){
+            sortedMap.put(entry.getKey(), entry.getValue());
+        }
+      
+        return sortedMap;
+    }
+    
+    
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
@@ -55,9 +89,7 @@ public class answerServlet extends HttpServlet {
 		PrintWriter out=null;
 
 		try {
-
-
-			ArrayList <AnswerContent> messageResult= new ArrayList <AnswerContent>();
+			ArrayList <String> messageResult= new ArrayList <String>();
 			Gson gson = new Gson();
 			String jsonResult;
 			response.setContentType("text/html");
@@ -89,27 +121,41 @@ public class answerServlet extends HttpServlet {
 			}
 			*/
 			//int offset = Integer.parseInt(request.getParameter("offset"));
-			pstmt = conn.prepareStatement(AppConstants.SELECT_ANSWERS);
-			int qid = Integer.parseInt(request.getParameter("qid"));
-			pstmt.setInt(1, qid);
+			if(request.getParameter("get").equals("allTopics"))
+			{
+				pstmt = conn.prepareStatement(AppConstants.SELECT_TOPICS);
+			}
 			rs = pstmt.executeQuery();
 			
-			long tsTime;
-			DateFormat df;
-			Date startDate;
-			String createdDate;
 			
+			Map<String, Float> topics = new HashMap<String, Float>();
 			while(rs.next()){
-				tsTime = rs.getTimestamp(1).getTime();
-				df = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
-				startDate = new Date(tsTime);
-				createdDate = df.format(startDate);
-				//modify date format
-				AnswerContent qC = new AnswerContent ( createdDate, rs.getString(2), rs.getString(3), rs.getInt(4),rs.getInt(5));
-				messageResult.add(qC);
-
+				if(topics.containsKey(rs.getString(1)))
+				{
+					topics.put(rs.getString(1), topics.get(rs.getString(1)) + rs.getFloat(2));
+				}else{
+					topics.put(rs.getString(1), rs.getFloat(2));
+				}
 			}
-			jsonResult=gson.toJson(messageResult,ArrayList.class);
+			//sorting Map like Hashtable and HashMap by values in Java
+			Map<String, Float> sorted = sortByValues(topics);
+	        System.out.println("Sorted Map in Java by values: " + sorted);
+			
+	        Set<String> set = sorted.keySet();
+	        System.out.println("Sorted set in Java by values: " + set);
+	        
+	        Integer counter = 0;
+	        for(String s : set){
+	        	System.out.println(s);
+	        	if (counter < 20) {
+		        	messageResult.add(s);
+		        	counter++;
+	        	} else {
+	        		break;
+	        	}
+	        }
+	        
+	        jsonResult=gson.toJson(messageResult,ArrayList.class);
 			out.print(jsonResult);
 			
 
@@ -129,63 +175,8 @@ public class answerServlet extends HttpServlet {
 	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		Connection connection = null;
-		PreparedStatement pStatement = null;
-		Statement statement = null;
-		ResultSet resSet = null;
-		
-		Date date=new Date();
-		Timestamp timestamp = new Timestamp(date.getTime());
-		
-		int id = 1;
-		try {
-			
-			Context context = new InitialContext();
-			BasicDataSource dataSource = (BasicDataSource) context.lookup(AppConstants.DB_DATASOURCE);
-			connection = dataSource.getConnection();
-			
-			statement = connection.createStatement();
-			resSet = statement.executeQuery(AppConstants.A_MAX_ID);
-			if(resSet.next() == true)
-			{
-				id = resSet.getInt(1)+1;
-			} 
-			connection.commit();
-			statement.close();
-			
-			pStatement = connection.prepareStatement(AppConstants.INSERT_ANSWER_STMT);
-			pStatement.setInt ( 1 , id);
-			pStatement.setInt ( 2 , Integer.parseInt(request.getParameter("id")));
-			pStatement.setInt ( 3 , 0);
-			pStatement.setString( 4 , request.getParameter("answer"));
-			pStatement.setString( 5 , request.getParameter("nickname"));
-			pStatement.setTimestamp ( 6 , timestamp);
-		
-			pStatement.executeUpdate();
-			connection.commit();
-			
-			//update questions table
-			pStatement.close();
-			pStatement = connection.prepareStatement(AppConstants.UPDATE_Q_TABLE);
-			pStatement.setInt ( 1 , Integer.parseInt(request.getParameter("id")));
-			pStatement.executeUpdate();
-			connection.commit();
-			
-			response.setContentType("text/html");
-			response.getWriter().print("Ok");
-			System.out.println("Ok");
-			
-		} catch (NamingException | SQLException e) {
-			e.printStackTrace();
-		}
-		finally{
-			try {
-				pStatement.close();
-				connection.close();
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
-		}
+		// TODO Auto-generated method stub
+		doGet(request, response);
 	}
 
 }

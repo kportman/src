@@ -1,7 +1,7 @@
 package app.model;
 
 public class AnswerContent {
-	private int qid;
+	private int id;
 	private String time;
 	private String nickname;
 	private int votes;
@@ -13,7 +13,7 @@ public class AnswerContent {
 		this.nickname = nickname;
 		this.votes = votes;
 		this.text = text;
-		this.qid = id;
+		this.id = id;
 	}
 	
 }

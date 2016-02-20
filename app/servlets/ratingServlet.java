@@ -23,16 +23,16 @@ import org.apache.tomcat.dbcp.dbcp.BasicDataSource;
 import app.AppConstants;
 
 /**
- * Servlet implementation class questionServlet
+ * Servlet implementation class ratingServlet
  */
-@WebServlet("/questionServlet")
-public class questionServlet extends HttpServlet {
+@WebServlet("/ratingServlet")
+public class ratingServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
        
     /**
      * @see HttpServlet#HttpServlet()
      */
-    public questionServlet() {
+    public ratingServlet() {
         super();
         // TODO Auto-generated constructor stub
     }
@@ -54,37 +54,50 @@ public class questionServlet extends HttpServlet {
 		Statement statement = null;
 		ResultSet resSet = null;
 		
-		Date date=new Date();
-		Timestamp timestamp = new Timestamp(date.getTime());
+		//Date date=new Date();
+		//Timestamp timestamp = new Timestamp(date.getTime());
 		
-		int id = 1;
+		//int id = 1;
 		try {
 			
 			Context context = new InitialContext();
 			BasicDataSource dataSource = (BasicDataSource) context.lookup(AppConstants.DB_DATASOURCE);
 			connection = dataSource.getConnection();
 			
-			statement = connection.createStatement();
-			resSet = statement.executeQuery(AppConstants.Q_MAX_ID);
-			if(resSet.next() == true)
-			{
-				id = resSet.getInt(1)+1;
-			} 
-			connection.commit();
-			statement.close();
+			//statement = connection.createStatement();
+			//resSet = statement.executeQuery(AppConstants.A_MAX_ID);
+			 
+			//connection.commit();
+			//statement.close();
 			
-			pStatement = connection.prepareStatement(AppConstants.INSERT_QUESTION_STMT);
-			pStatement.setInt ( 1 , id);
-			pStatement.setFloat ( 2 , 0);
-			pStatement.setInt ( 3 , 0);
-			pStatement.setString( 4 , request.getParameter("question"));
-			pStatement.setString( 5 , request.getParameter("nickname"));
-			pStatement.setTimestamp ( 6 , timestamp);
-			pStatement.setInt( 7, 0);
-			pStatement.setString(8, request.getParameter("topic"));
-			pStatement.setInt( 9, 0);
-			pStatement.executeUpdate();
-			connection.commit();
+			if(request.getParameter("voteType").equals("answer"))
+			{
+				pStatement = connection.prepareStatement(AppConstants.VOTE_ANSWER_STMT);
+				pStatement.setInt ( 1 , Integer.parseInt(request.getParameter("vote")));
+				pStatement.setInt ( 2 , Integer.parseInt(request.getParameter("ansID")));
+				pStatement.executeUpdate();
+				connection.commit();
+				pStatement.close();
+				//update questions table
+				pStatement = connection.prepareStatement(AppConstants.VOTE_ANS_UPDATE_QUES_STMT );
+				pStatement.setInt ( 1 , Integer.parseInt(request.getParameter("vote")));
+				pStatement.setInt ( 2 , Integer.parseInt(request.getParameter("vote")));
+				pStatement.setInt ( 3 , Integer.parseInt(request.getParameter("quesID")));
+				pStatement.executeUpdate();
+				connection.commit();
+				
+			} else if(request.getParameter("voteType").equals("question")){
+				pStatement = connection.prepareStatement(AppConstants.VOTE_QUESTION_STMT);
+				pStatement.setInt ( 1 , Integer.parseInt(request.getParameter("vote")));
+				pStatement.setInt ( 2 , Integer.parseInt(request.getParameter("vote")));
+				pStatement.setInt ( 3 , Integer.parseInt(request.getParameter("vote")));
+				pStatement.setInt ( 4 , Integer.parseInt(request.getParameter("quesID")));
+				pStatement.executeUpdate();
+				connection.commit();
+				
+			}
+			
+		
 			
 			response.setContentType("text/html");
 			response.getWriter().print("Ok");
@@ -101,7 +114,6 @@ public class questionServlet extends HttpServlet {
 				e.printStackTrace();
 			}
 		}
-
 	}
 
 }

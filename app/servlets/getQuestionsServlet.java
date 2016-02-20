@@ -86,9 +86,24 @@ public class getQuestionsServlet extends HttpServlet {
 				pstmt.setInt(3, 10);
 			}
 			*/
-			//int offset = Integer.parseInt(request.getParameter("offset"));
-			pstmt = conn.prepareStatement(AppConstants.SELECT_NEW_QUESTIONS_BY_OFFSET);
-			pstmt.setInt(1, 0);
+			
+			
+			String type = request.getParameter("getQuestions");
+			int offset = Integer.parseInt(request.getParameter("offset"));
+			if(type.equals("newest"))
+			{
+				pstmt = conn.prepareStatement(AppConstants.SELECT_NEW_QUESTIONS_BY_OFFSET);
+				pstmt.setInt(1, offset);
+			} else if(type.equals("existing"))
+			{
+				pstmt = conn.prepareStatement(AppConstants.SELECT_EXIST_QUESTIONS_BY_OFFSET);
+				pstmt.setInt(1, offset);
+			}else{
+				pstmt = conn.prepareStatement(AppConstants.SELECT_TOPIC_QUESTIONS_BY_OFFSET);
+				pstmt.setString(1, type);
+				pstmt.setInt(2, offset);
+			}
+			
 			rs = pstmt.executeQuery();
 			
 			long tsTime;
@@ -102,7 +117,7 @@ public class getQuestionsServlet extends HttpServlet {
 				startDate = new Date(tsTime);
 				createdDate = df.format(startDate);
 				
-				QuestionContent qC = new QuestionContent ( createdDate, rs.getString(2), rs.getString(3), rs.getString(4), rs.getInt(5),rs.getInt(6),rs.getInt(7));
+				QuestionContent qC = new QuestionContent ( createdDate, rs.getString(2), rs.getString(3), rs.getString(4), rs.getFloat(5),rs.getInt(6),rs.getInt(7));
 				messageResult.add(qC);
 
 			}
