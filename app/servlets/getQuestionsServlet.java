@@ -117,7 +117,7 @@ public class getQuestionsServlet extends HttpServlet {
 				startDate = new Date(tsTime);
 				createdDate = df.format(startDate);
 				
-				QuestionContent qC = new QuestionContent ( createdDate, rs.getString(2), rs.getString(3), rs.getString(4), rs.getFloat(5),rs.getInt(6),rs.getInt(7));
+				QuestionContent qC = new QuestionContent ( createdDate, rs.getString(2), rs.getString(3), rs.getString(4), rs.getFloat(5),rs.getFloat(6),rs.getInt(7));
 				messageResult.add(qC);
 
 			}

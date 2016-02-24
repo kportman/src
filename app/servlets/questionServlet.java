@@ -76,13 +76,22 @@ public class questionServlet extends HttpServlet {
 			pStatement = connection.prepareStatement(AppConstants.INSERT_QUESTION_STMT);
 			pStatement.setInt ( 1 , id);
 			pStatement.setFloat ( 2 , 0);
-			pStatement.setInt ( 3 , 0);
+			pStatement.setFloat ( 3 , 0);
 			pStatement.setString( 4 , request.getParameter("question"));
 			pStatement.setString( 5 , request.getParameter("nickname"));
 			pStatement.setTimestamp ( 6 , timestamp);
 			pStatement.setInt( 7, 0);
 			pStatement.setString(8, request.getParameter("topic"));
 			pStatement.setInt( 9, 0);
+			pStatement.executeUpdate();
+			connection.commit();
+			pStatement.close();
+			
+			//update USERS table
+			pStatement = connection.prepareStatement(AppConstants.UPDATE_USERS_TABLE);
+			pStatement.setString( 1 , request.getParameter("nickname"));
+			pStatement.setString( 2 , request.getParameter("nickname"));
+			pStatement.setString( 3 , request.getParameter("nickname"));
 			pStatement.executeUpdate();
 			connection.commit();
 			

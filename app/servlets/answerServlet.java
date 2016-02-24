@@ -105,7 +105,7 @@ public class answerServlet extends HttpServlet {
 				startDate = new Date(tsTime);
 				createdDate = df.format(startDate);
 				//modify date format
-				AnswerContent qC = new AnswerContent ( createdDate, rs.getString(2), rs.getString(3), rs.getInt(4),rs.getInt(5));
+				AnswerContent qC = new AnswerContent ( createdDate, rs.getString(2), rs.getString(3), rs.getFloat(4),rs.getInt(5));
 				messageResult.add(qC);
 
 			}
@@ -156,7 +156,7 @@ public class answerServlet extends HttpServlet {
 			pStatement = connection.prepareStatement(AppConstants.INSERT_ANSWER_STMT);
 			pStatement.setInt ( 1 , id);
 			pStatement.setInt ( 2 , Integer.parseInt(request.getParameter("id")));
-			pStatement.setInt ( 3 , 0);
+			pStatement.setFloat ( 3 , 0);
 			pStatement.setString( 4 , request.getParameter("answer"));
 			pStatement.setString( 5 , request.getParameter("nickname"));
 			pStatement.setTimestamp ( 6 , timestamp);
@@ -168,6 +168,15 @@ public class answerServlet extends HttpServlet {
 			pStatement.close();
 			pStatement = connection.prepareStatement(AppConstants.UPDATE_Q_TABLE);
 			pStatement.setInt ( 1 , Integer.parseInt(request.getParameter("id")));
+			pStatement.executeUpdate();
+			connection.commit();
+			
+			//update USERS table
+			pStatement.close();
+			pStatement = connection.prepareStatement(AppConstants.UPDATE_USERS_TABLE);
+			pStatement.setString( 1 , request.getParameter("nickname"));
+			pStatement.setString( 2 , request.getParameter("nickname"));
+			pStatement.setString( 3 , request.getParameter("nickname"));
 			pStatement.executeUpdate();
 			connection.commit();
 			

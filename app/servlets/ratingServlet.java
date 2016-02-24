@@ -97,7 +97,14 @@ public class ratingServlet extends HttpServlet {
 				
 			}
 			
-		
+			//update USERS table
+			pStatement.close();
+			pStatement = connection.prepareStatement(AppConstants.UPDATE_USERS_TABLE);
+			pStatement.setString( 1 , request.getParameter("nickname"));
+			pStatement.setString( 2 , request.getParameter("nickname"));
+			pStatement.setString( 3 , request.getParameter("nickname"));
+			pStatement.executeUpdate();
+			connection.commit();
 			
 			response.setContentType("text/html");
 			response.getWriter().print("Ok");
